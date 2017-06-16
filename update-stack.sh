@@ -61,9 +61,11 @@ params=(
 
 stack_name="$1"
 
-set -x
 aws cloudformation update-stack \
   --stack-name "$stack_name" \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
   --parameters "${params[@]}" \
   --capabilities CAPABILITY_NAMED_IAM
+
+stack_follow "$stack_name"
+
