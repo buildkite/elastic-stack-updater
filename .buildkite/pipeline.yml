@@ -1,12 +1,12 @@
 
 steps:
-  - name: ":cloudformation: :chart_with_upwards_trend: elastic-builders"
+  - name: ":cloudformation: :building_construction: elastic-builders"
     agents:
       queue: elastic-builders
     command: ./update-stack.sh elastic-builders
 
   - wait
-  - name: ":cloudformation: :building_construction: elastic-pipeline-uploaders"
+  - name: ":cloudformation: :chart_with_upwards_trend: elastic-pipeline-uploaders"
     agents:
       queue: elastic-builders
     command: ./update-stack.sh elastic-pipeline-uploaders
