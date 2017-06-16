@@ -1,0 +1,6 @@
+
+steps:
+  - name: ":aws: Updating elastic builders"
+    agents:
+      queue: elastic-builders
+    command: update-stack.sh
