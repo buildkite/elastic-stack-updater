@@ -24,6 +24,15 @@ stack_failures() {
 ## -------------------------------------------------
 ## main
 
+echo "+++ Querying vpc/subnets from ${stack_name}"
+vpc_id=vpc-53922135
+subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
+subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+
+echo "$subnet_ids"
+echo "$az_ids"
+
 params=(
   "ParameterKey=AgentsPerInstance,UsePreviousValue=true"
   "ParameterKey=BuildkiteAgentRelease,UsePreviousValue=true"
@@ -43,7 +52,10 @@ params=(
   "ParameterKey=ScaleUpAdjustment,UsePreviousValue=true"
   "ParameterKey=SecretsBucket,UsePreviousValue=true"
   "ParameterKey=SpotPrice,UsePreviousValue=true"
+  "ParameterKey=Vpc,Value=vpc-53922135"
   )
+
+
 
 stack_name="$1"
 
@@ -54,6 +66,11 @@ aws cloudformation update-stack \
   --parameters "${params[@]}" \
   --capabilities CAPABILITY_NAMED_IAM
 
-aws cloudformation wait stack-update-complete --stack-name "$stack_name"
-stack_status "$stack_name"
-stack_events "$stack_name"
+if ! aws cloudformation wait stack-update-complete --stack-name "$stack_name" ; then
+  stack_events "$stack_name"
+  stack_status "$stack_name"
+  exit 1
+fi
+
+echo "Completed."
+
