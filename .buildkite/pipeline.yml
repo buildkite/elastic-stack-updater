@@ -1,6 +1,18 @@
 
 steps:
-  - name: ":aws: Updating elastic builders"
+  - name: ":aws: elastic-builders"
     agents:
       queue: elastic-builders
-    command: update-stack.sh
+    command: ./update-stack.sh elastic-builders
+
+  - wait
+  - name: ":aws: elastic-pipeline-uploaders"
+    agents:
+      queue: elastic-builders
+    command: ./update-stack.sh elastic-pipeline-uploaders
+
+  - wait
+  - name: ":aws: elastic-runners-new"
+    agents:
+      queue: elastic-builders
+    command: ./update-stack.sh elastic-runners-new
