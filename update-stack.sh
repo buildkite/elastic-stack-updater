@@ -40,7 +40,6 @@ stack_follow() {
 
 stack_name="$1"
 
-aws cloudformation create-change-set \
+aws cloudformation update-stack \
   --stack-name "$stack_name" \
-  --change-set-name "build-${BUILDKITE_BUILD_NUMBER}" \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json"
