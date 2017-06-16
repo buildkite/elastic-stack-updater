@@ -25,6 +25,7 @@ stack_failures() {
 ## main
 
 stack_name="$1"
+change_set_name="${BUILDKITE_PIPELINE_SLUG}-build-${BUILDKITE_BUILD_NUMBER}"
 
 echo "+++ Querying vpc/subnets from ${stack_name}"
 
@@ -62,18 +63,13 @@ params=(
   "ParameterKey=VpcId,UsePreviousValue=true"
   )
 
-echo "+++ Updating :cloudformation: ${stack_name}"
-aws cloudformation update-stack \
+echo "+++ :cloudformation: Creating change set ${change_set_name} for ${stack_name}"
+aws cloudformation create-change-set \
   --stack-name "$stack_name" \
+  --change-set-name "$change_set_name" \
+  --change-set-type "UPDATE" \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
   --parameters "${params[@]}" \
   --capabilities CAPABILITY_NAMED_IAM
 
-if ! aws cloudformation wait stack-update-complete --stack-name "$stack_name" ; then
-  stack_events "$stack_name"
-  stack_status "$stack_name"
-  exit 1
-fi
-
-echo "Completed."
-
+aws cloudformation wait change-set-create-complete --stack-name "$change_set_name"
