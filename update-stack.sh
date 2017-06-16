@@ -28,14 +28,19 @@ stack_follow() {
   done
   if [[ $status =~ FAILED ]] ; then
     stack_events "$1"
-    echo -e "\033[33;31mStack creation failed!\n$(stack_failures "$1")\033[0m"
+    echo -e "\033[33;31mStack update failed!\n$(stack_failures "$1")\033[0m"
     return 1
   else
-    echo -e "\033[33;32mStack completed successfully\033[0m"
+    echo -e "\033[33;32mStack updated successfully\033[0m"
   fi
 }
 
 ## -------------------------------------------------
 ## main
 
-aws cloudformation list-stacks
+stack_name="$1"
+
+aws cloudformation create-change-set \
+  --stack-name "$stack_name" \
+  --change-set-name "build-${BUILDKITE_BUILD_NUMBER}" \
+  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json"
