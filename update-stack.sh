@@ -65,4 +65,4 @@ set -x
 aws cloudformation update-stack \
   --stack-name "$stack_name" \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
-  --parameters "${params[*]}"
+  --parameters "${params[@]}"
