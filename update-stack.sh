@@ -72,4 +72,6 @@ aws cloudformation create-change-set \
   --parameters "${params[@]}" \
   --capabilities CAPABILITY_NAMED_IAM
 
-aws cloudformation wait change-set-create-complete --stack-name "$change_set_name"
+aws cloudformation wait change-set-create-complete \
+  --stack-name "$stack_name" \
+  --change-set-name "$change_set_name"
