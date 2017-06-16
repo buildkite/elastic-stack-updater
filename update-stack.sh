@@ -54,6 +54,6 @@ aws cloudformation update-stack \
   --parameters "${params[@]}" \
   --capabilities CAPABILITY_NAMED_IAM
 
-aws cloudformation wait stack-create-complete --stack-name "$stack_name"
+aws cloudformation wait stack-update-complete --stack-name "$stack_name"
 stack_status "$stack_name"
 stack_events "$stack_name"
