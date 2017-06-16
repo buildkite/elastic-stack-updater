@@ -27,6 +27,11 @@ stack_failures() {
 stack_name="$1"
 
 echo "+++ Querying vpc/subnets from ${stack_name}"
+
+# There is a bizarre bug where AZ's can actually change over time. This means when the update
+# happens and the results of Fn::GetAZs change you get strange errors along the lines of
+#
+
 vpc_id=vpc-53922135
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -54,7 +59,7 @@ params=(
   "ParameterKey=ScaleUpAdjustment,UsePreviousValue=true"
   "ParameterKey=SecretsBucket,UsePreviousValue=true"
   "ParameterKey=SpotPrice,UsePreviousValue=true"
-  "ParameterKey=Vpc,UsePreviousValue=true"
+  "ParameterKey=VpcId,UsePreviousValue=true"
   )
 
 echo "+++ Updating :cloudformation: ${stack_name}"
