@@ -24,6 +24,8 @@ stack_failures() {
 ## -------------------------------------------------
 ## main
 
+stack_name="$1"
+
 echo "+++ Querying vpc/subnets from ${stack_name}"
 vpc_id=vpc-53922135
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
@@ -52,12 +54,8 @@ params=(
   "ParameterKey=ScaleUpAdjustment,UsePreviousValue=true"
   "ParameterKey=SecretsBucket,UsePreviousValue=true"
   "ParameterKey=SpotPrice,UsePreviousValue=true"
-  "ParameterKey=Vpc,Value=vpc-53922135"
+  "ParameterKey=Vpc,UsePreviousValue=true"
   )
-
-
-
-stack_name="$1"
 
 echo "+++ Updating :cloudformation: ${stack_name}"
 aws cloudformation update-stack \
