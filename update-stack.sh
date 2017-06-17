@@ -31,10 +31,10 @@ aws lambda invoke \
   --function-name updateElasticStack \
   --region us-east-1 \
   --log-type Tail \
-  --payload "{\"StackName\":\"$stack_name\"}" \
-  outputlog.txt
+  --payload "{\"StackName\":\"$stack_name\"}"
+  output.json
 
-cat outputlog.txt | base64 --decode
+jq '.LogResult' -f output.json
 
 # aws cloudformation wait change-set-create-complete \
 #   --stack-name "$stack_name" \

@@ -1,28 +1,23 @@
 Elastic Stack Updater
 =====================
 
-Updates our internal elastic stacks on a regular schedule
+Updates our internal elastic stacks on a regular schedule. Since updating the stack requires admin IAM permissions, a lambda function is used. 
 
-The policy is requires is:
+To trigger the lambda function the following policy is required:
 
 ```
 {
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "InvokePermission",
             "Effect": "Allow",
             "Action": [
-                "cloudformation:CreateChangeSet"
+                "lambda:InvokeFunction"
             ],
-            "Resource": "arn:aws:cloudformation:us-east-1:445615400570:stack/elastic-builders/*",
-            "Condition": {
-                "StringEquals": {
-                    "cloudformation:TemplateURL": [
-                        "s3://buildkite-aws-stack/aws-stack.json"
-                    ]
-                }
-            }
+            "Resource": "arn:aws:lambda:us-east-1:445615400570:function:updateElasticStack"
         }
     ]
 }
 ```
+
