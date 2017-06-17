@@ -35,7 +35,7 @@ aws lambda invoke \
   --payload "{\"StackName\":\"$stack_name\"}" \
   output.json
 
-error_message=$(jq '.errorMessage' < output.json)
+jq '.errorMessage' < output.json
 
 if [[ "$(jq '.errorMessage' < output.json)" == "No updates are to be performed." ]] ; then
   echo "+++ No updates are needed! Stack is up-to-date"
