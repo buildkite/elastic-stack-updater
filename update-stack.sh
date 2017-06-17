@@ -26,6 +26,7 @@ stack_failures() {
 
 stack_name="$1"
 
+echo "--- :lambda: Invoking updateElasticStack function"
 aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
@@ -36,7 +37,6 @@ aws lambda invoke \
 
 jq '.LogResult' -f output.json | base64 --decode
 
-
-# aws cloudformation wait change-set-create-complete \
-#   --stack-name "$stack_name" \
-#   --change-set-name "$change_set_name"
+echo "--- :cloudformation: Waiting for stack update to complete"
+aws cloudformation wait stack-update-complete \
+  --stack-name "$stack_name"
