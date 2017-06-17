@@ -27,21 +27,22 @@ stack_failures() {
 stack_name="$1"
 
 echo "--- :lambda: Invoking updateElasticStack function"
-aws lambda invoke \
+output=$(aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
   --region us-east-1 \
   --log-type Tail \
   --payload "{\"StackName\":\"$stack_name\"}" \
-  --query "StatusCode" \
-  output.json
+  output.json)
+
+[[ $? -eq 0 ]] || (
+  echo $output
+  exit 1
+)
 
 jq '.' < output.json
 
-error_message="$(jq '.errorMessage' < output.json)"
-echo "error: $error_message"
-
-if [[ "$error_message" == "No updates are to be performed." ]] ; then
+if [[ "$(jq --raw-output '.errorMessage' < output.json)" == "No updates are to be performed." ]] ; then
   echo "+++ No updates are needed! Stack is up-to-date"
   exit 0
 fi
