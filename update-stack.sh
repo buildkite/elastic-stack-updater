@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 ## -------------------------------------------------
 ## functions
@@ -35,8 +35,12 @@ aws lambda invoke \
   --payload "{\"StackName\":\"$stack_name\"}" \
   output.json
 
-cat output.json
-cat output.json | jq '.LogResult'
+error_message=$(jq '.errorMessage' < output.json)
+
+if [[ "$(jq '.errorMessage' < output.json)" == "No updates are to be performed." ]] ; then
+  echo "+++ No updates are needed! Stack is up-to-date"
+  exit 0
+fi
 
 echo "--- :cloudformation: Waiting for stack update to complete"
 aws cloudformation wait stack-update-complete \
