@@ -33,11 +33,15 @@ aws lambda invoke \
   --region us-east-1 \
   --log-type Tail \
   --payload "{\"StackName\":\"$stack_name\"}" \
+  --query "StatusCode" \
   output.json
 
-jq '.errorMessage' < output.json
+jq '.' < output.json
 
-if [[ "$(jq '.errorMessage' < output.json)" == "No updates are to be performed." ]] ; then
+error_message="$(jq '.errorMessage' < output.json)"
+echo "error: $error_message"
+
+if [[ "$error_message" == "No updates are to be performed." ]] ; then
   echo "+++ No updates are needed! Stack is up-to-date"
   exit 0
 fi
