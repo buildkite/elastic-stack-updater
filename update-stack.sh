@@ -35,7 +35,7 @@ aws lambda invoke \
   --payload "{\"StackName\":\"$stack_name\"}" \
   output.json
 
-jq '.LogResult' -f output.json | base64 --decode
+jq '.LogResult' < output.json | base64 --decode
 
 echo "--- :cloudformation: Waiting for stack update to complete"
 aws cloudformation wait stack-update-complete \
