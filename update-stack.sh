@@ -25,53 +25,17 @@ stack_failures() {
 ## main
 
 stack_name="$1"
-change_set_name="${BUILDKITE_PIPELINE_SLUG}-build-${BUILDKITE_BUILD_NUMBER}"
 
-echo "+++ Querying vpc/subnets from ${stack_name}"
+aws lambda invoke \
+  --invocation-type RequestResponse \
+  --function-name updateElasticStack \
+  --region us-east-1 \
+  --log-type Tail \
+  --payload "{\"StackName\":\"$stack_name\"}" \
+  outputlog.txt
 
-# There is a bizarre bug where AZ's can actually change over time. This means when the update
-# happens and the results of Fn::GetAZs change you get strange errors along the lines of
-#
+cat outputlog.txt | base64 --decode
 
-vpc_id=vpc-53922135
-subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
-subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
-az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
-
-echo "$subnet_ids"
-echo "$az_ids"
-
-params=(
-  "ParameterKey=AgentsPerInstance,UsePreviousValue=true"
-  "ParameterKey=BuildkiteAgentRelease,UsePreviousValue=true"
-  "ParameterKey=BuildkiteAgentToken,UsePreviousValue=true"
-  "ParameterKey=BuildkiteApiAccessToken,UsePreviousValue=true"
-  "ParameterKey=BuildkiteOrgSlug,UsePreviousValue=true"
-  "ParameterKey=BuildkiteQueue,UsePreviousValue=true"
-  "ParameterKey=ECRAccessPolicy,UsePreviousValue=true"
-  "ParameterKey=InstanceType,UsePreviousValue=true"
-  "ParameterKey=KeyName,UsePreviousValue=true"
-  "ParameterKey=ManagedPolicyARN,UsePreviousValue=true"
-  "ParameterKey=MaxSize,UsePreviousValue=true"
-  "ParameterKey=MinSize,UsePreviousValue=true"
-  "ParameterKey=RootVolumeSize,UsePreviousValue=true"
-  "ParameterKey=ScaleDownAdjustment,UsePreviousValue=true"
-  "ParameterKey=ScaleDownPeriod,UsePreviousValue=true"
-  "ParameterKey=ScaleUpAdjustment,UsePreviousValue=true"
-  "ParameterKey=SecretsBucket,UsePreviousValue=true"
-  "ParameterKey=SpotPrice,UsePreviousValue=true"
-  "ParameterKey=VpcId,UsePreviousValue=true"
-  )
-
-echo "+++ :cloudformation: Creating change set ${change_set_name} for ${stack_name}"
-aws cloudformation create-change-set \
-  --stack-name "$stack_name" \
-  --change-set-name "$change_set_name" \
-  --change-set-type "UPDATE" \
-  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
-  --parameters "${params[@]}" \
-  --capabilities CAPABILITY_NAMED_IAM
-
-aws cloudformation wait change-set-create-complete \
-  --stack-name "$stack_name" \
-  --change-set-name "$change_set_name"
+# aws cloudformation wait change-set-create-complete \
+#   --stack-name "$stack_name" \
+#   --change-set-name "$change_set_name"
