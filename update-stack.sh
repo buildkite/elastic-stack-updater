@@ -5,7 +5,11 @@ stack_name="$1"
 stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${STACK_FILE:-aws-stack.json}" \
   | jq .Description -r | sed 's/Buildkite stack //')"
 
-echo "+++ :lambda: Triggering lambda function updateElasticStack"
+echo "--- :cloudformation: Waiting for any previous stack updates"
+aws cloudformation wait stack-update-complete \
+  --stack-name "$stack_name"
+
+echo "--- :lambda: Updating to ${STACK_FILE:-aws-stack.json} (${stack_version})"
 output=$(aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
@@ -24,12 +28,6 @@ if [[ "$(jq --raw-output '.errorMessage' < output.json)" == "No updates are to b
   exit 0
 fi
 
-buildkite-agent pipeline upload << EOF
-steps:
-  - wait
-  - name: "⌛️ Wait for ${stack_version}"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-      buildkite-aws-stack: "${stack_version}"
-    command: ./wait-stack.sh "${stack_name}"
-EOF
+echo "--- :cloudformation: ⌛️ Waiting for update to complete"
+aws cloudformation wait stack-update-complete \
+  --stack-name "$stack_name"
