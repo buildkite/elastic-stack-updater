@@ -1,8 +1,15 @@
 
 steps:
-  - name: ":cloudformation: :building_construction: elastic-builders"
+  - name: ":cloudformation: :runner: elastic-runners-new"
     agents:
       queue: elastic-builders
+    command: ./update-stack.sh elastic-runners-new
+    artifact_paths: "output.json"
+
+  - wait
+  - name: ":cloudformation: :building_construction: elastic-builders"
+    agents:
+      stack: elastic-runners-new
     command: ./update-stack.sh elastic-builders
     artifact_paths: "output.json"
 
@@ -11,11 +18,4 @@ steps:
     agents:
       queue: elastic-builders
     command: ./update-stack.sh elastic-pipeline-uploaders
-    artifact_paths: "output.json"
-
-  - wait
-  - name: ":cloudformation: :runner: elastic-runners-new"
-    agents:
-      queue: elastic-builders
-    command: ./update-stack.sh elastic-runners-new
     artifact_paths: "output.json"
