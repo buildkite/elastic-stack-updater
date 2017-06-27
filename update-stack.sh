@@ -26,7 +26,8 @@ fi
 
 buildkite-agent pipeline upload << EOF
 steps:
-  - name: ":cloudformation: ${stack_name} 📈 ${stack_version}"
+  - wait
+  - name: "⌛️ Wait for ${stack_version}"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
       buildkite-aws-stack: "${stack_version}"
