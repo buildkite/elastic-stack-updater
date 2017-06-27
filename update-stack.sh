@@ -2,16 +2,16 @@
 set -euo pipefail
 
 stack_name="$1"
-stack_version="$(curl -Lfs https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json \
+stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${STACK_FILE:-aws-stack.json}" \
   | jq .Description -r | sed 's/Buildkite stack //')"
 
-echo "--- :lambda: Invoking updateElasticStack function"
+echo "+++ :lambda: Triggering lambda function updateElasticStack"
 output=$(aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
   --region us-east-1 \
   --log-type Tail \
-  --payload "{\"StackName\":\"$stack_name\"}" \
+  --payload "{\"StackName\":\"$stack_name\", \"StackFile\":\"${STACK_FILE:-aws-stack.json}\"}" \
   output.json) || (
   echo "$output"
   exit 1

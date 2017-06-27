@@ -56,6 +56,7 @@ var getAvailabilityZonesFromStack = function(stackName, cb) {
 
 exports.handler = function name(event, context) {
   var stackName = event.StackName;
+  var stackFile = event.StackFile;
 
   var params = {
     StackName: stackName,
@@ -63,7 +64,7 @@ exports.handler = function name(event, context) {
       'CAPABILITY_NAMED_IAM'
     ],
     Parameters: [],
-    TemplateURL: 'https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json',
+    TemplateURL: 'https://s3.amazonaws.com/buildkite-aws-stack/'+stackFile,
   };
 
   getPreviousTemplateKeys(stackName, function(err, previousParameterKeys){
