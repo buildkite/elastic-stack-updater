@@ -1,30 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-## -------------------------------------------------
-## functions
-
-stack_status() {
-  aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
-}
-
-stack_events() {
-  aws cloudformation describe-stack-events --stack-name "$1" --output table --query 'sort_by(StackEvents, &Timestamp)[].[
-    EventId,
-    ResourceStatus
-  ]' | sed 1,2d
-}
-
-stack_failures() {
-  aws cloudformation describe-stack-events --stack-name "$1" --output table --query \
-    "sort_by(StackEvents, &Timestamp)[?ResourceStatus=='CREATE_FAILED'].[LogicalResourceId,ResourceStatusReason]" \
-  | sed 1,2d
-}
-
-## -------------------------------------------------
-## main
-
 stack_name="$1"
+stack_version="$(curl -Lfs https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json \
+  | jq .Description -r | sed 's/Buildkite stack //')"
 
 echo "--- :lambda: Invoking updateElasticStack function"
 output=$(aws lambda invoke \
@@ -33,10 +12,8 @@ output=$(aws lambda invoke \
   --region us-east-1 \
   --log-type Tail \
   --payload "{\"StackName\":\"$stack_name\"}" \
-  output.json)
-
-[[ $? -eq 0 ]] || (
-  echo $output
+  output.json) || (
+  echo "$output"
   exit 1
 )
 
@@ -47,6 +24,11 @@ if [[ "$(jq --raw-output '.errorMessage' < output.json)" == "No updates are to b
   exit 0
 fi
 
-echo "--- :cloudformation: Waiting for stack update to complete"
-aws cloudformation wait stack-update-complete \
-  --stack-name "$stack_name"
+buildkite-agent pipeline upload << EOF
+steps:
+  - name: ":cloudformation: ${stack_name} 📈 ${stack_version}"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+      buildkite-aws-stack: "${stack_version}"
+    command: ./wait-stack.sh "${stack_name}"
+EOF
