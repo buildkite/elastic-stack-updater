@@ -28,6 +28,11 @@ if [[ "$(jq --raw-output '.errorMessage' < output.json)" == "No updates are to b
   exit 0
 fi
 
+if [[ "$(jq --raw-output '.errorMessage' < output.json)" != "null" ]] ; then
+  echo "^^^ +++"
+  exit 1
+fi
+
 echo "--- :cloudformation: ⌛️ Waiting for update to complete"
 aws cloudformation wait stack-update-complete \
   --stack-name "$stack_name"
