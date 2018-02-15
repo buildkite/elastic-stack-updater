@@ -12,38 +12,58 @@ var getPreviousTemplateKeys = function(stackName, cb) {
   });
 }
 
+var getNewTemplateKeys = function(templateURL, cb) {
+  cloudformation.getTemplateSummary({ TemplateURL: templateURL }, function(err, data) {
+    if (err !== null) {
+      cb(err, []);
+    } else {
+      cb(err, data.Parameters.map((obj) => obj.ParameterKey));
+    }
+  });
+}
+
 exports.handler = function name(event, context) {
   var stackName = event.StackName;
   var stackFile = event.StackFile;
+  var templateURL = 'https://s3.amazonaws.com/buildkite-aws-stack/'+stackFile;
 
-  var params = {
-    StackName: stackName,
-    Capabilities: [
-      'CAPABILITY_NAMED_IAM'
-    ],
-    Parameters: [],
-    TemplateURL: 'https://s3.amazonaws.com/buildkite-aws-stack/'+stackFile,
-  };
-
-  getPreviousTemplateKeys(stackName, function(err, previousParameterKeys){
+  getNewTemplateKeys(templateURL, function(err, newParameterKeys){
     if (err) {
       context.fail(err);
       return;
     }
 
-    // for anything not set, use the previous value
-    previousParameterKeys.forEach(function(k) {
-      params.Parameters.push({ ParameterKey: k, UsePreviousValue: true });
-    });
-
-    console.log('updateStack(%s)', stackName, params);
-
-    cloudformation.updateStack(params, function(err, data) {
+    getPreviousTemplateKeys(stackName, function(err, previousParameterKeys){
       if (err) {
         context.fail(err);
-        return
+        return;
       }
-      context.succeed(data);
+
+      var params = {
+        StackName: stackName,
+        Capabilities: [
+          'CAPABILITY_NAMED_IAM'
+        ],
+        Parameters: [],
+        TemplateURL: templateURL,
+      };
+
+      // for anything not set, use the previous value
+      previousParameterKeys.forEach(function(k) {
+        if (newParameterKeys.indexOf(k) !== -1) {
+          params.Parameters.push({ ParameterKey: k, UsePreviousValue: true });
+        }
+      });
+
+      console.log('updateStack(%s)', stackName, params);
+
+      cloudformation.updateStack(params, function(err, data) {
+        if (err) {
+          context.fail(err);
+          return;
+        }
+        context.succeed(data);
+      });
     });
   });
 };
