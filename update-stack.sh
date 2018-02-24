@@ -10,10 +10,6 @@ stack_name="$1"
 stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${STACK_FILE:-aws-stack.json}" \
   | jq .Description -r | sed 's/Buildkite stack //')"
 
-echo "--- :cloudformation: Waiting for any previous stack updates"
-aws cloudformation wait stack-update-complete \
-  --stack-name "$stack_name"
-
 echo "--- :lambda: Updating to ${STACK_FILE:-aws-stack.json} (${stack_version})"
 output=$(aws lambda invoke \
   --invocation-type RequestResponse \

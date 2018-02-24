@@ -5,6 +5,8 @@ steps:
       queue: elastic-builders
     command: ./update-stack.sh elastic-runners-new
     artifact_paths: "output.json"
+    concurrency: 1
+    concurrency_group: "elastic-stack-update"
 
   - wait
   - name: ":cloudformation: :building_construction: elastic-builders"
@@ -12,6 +14,8 @@ steps:
       stack: elastic-runners-new
     command: ./update-stack.sh elastic-builders
     artifact_paths: "output.json"
+    concurrency: 1
+    concurrency_group: "elastic-stack-update"
 
   - wait
   - name: ":cloudformation: :chart_with_upwards_trend: elastic-pipeline-uploaders"
@@ -19,3 +23,5 @@ steps:
       queue: elastic-builders
     command: ./update-stack.sh elastic-pipeline-uploaders
     artifact_paths: "output.json"
+    concurrency: 1
+    concurrency_group: "elastic-stack-update"
