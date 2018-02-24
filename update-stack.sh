@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+
+# download parfait binary
+wget -N https://github.com/lox/parfait/releases/download/v1.0.0/parfait_linux_amd64
+mv parfait_linux_amd64 parfait
+
 stack_name="$1"
 stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${STACK_FILE:-aws-stack.json}" \
   | jq .Description -r | sed 's/Buildkite stack //')"
@@ -34,5 +39,4 @@ if [[ "$(jq --raw-output '.errorMessage' < output.json)" != "null" ]] ; then
 fi
 
 echo "--- :cloudformation: ⌛️ Waiting for update to complete"
-aws cloudformation wait stack-update-complete \
-  --stack-name "$stack_name"
+./parfait watch-stack "$stack_name"
