@@ -3,7 +3,7 @@ set -euo pipefail
 
 
 # download parfait binary
-wget -N https://github.com/lox/parfait/releases/download/v1.1.2/parfait_linux_amd64
+wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
 mv parfait_linux_amd64 parfait
 chmod +x ./parfait
 
