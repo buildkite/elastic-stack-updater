@@ -10,7 +10,7 @@ chmod +x ./parfait
 stack_name="$1"
 stack_file="${STACK_FILE:-aws-stack.yml}"
 stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${stack_file}" \
-  | grep -E '^Description: ' | sed 's/Buildkite stack //' | cut -d' ' -f2)"
+  | grep -E '^Description: ' | sed 's/Description: //')"
 
 echo "--- :lambda: Updating to ${stack_file} (${stack_version})"
 output=$(aws lambda invoke \
