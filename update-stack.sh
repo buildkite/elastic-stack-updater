@@ -8,16 +8,17 @@ mv parfait_linux_amd64 parfait
 chmod +x ./parfait
 
 stack_name="$1"
-stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${STACK_FILE:-aws-stack.json}" \
-  | jq .Description -r | sed 's/Buildkite stack //')"
+stack_file="${STACK_FILE:-aws-stack.yml}"
+stack_version="$(curl -Lfs "https://s3.amazonaws.com/buildkite-aws-stack/${stack_file}" \
+  | grep -E '^Description: ' | sed 's/Buildkite stack //' | cut -d' ' -f2)"
 
-echo "--- :lambda: Updating to ${STACK_FILE:-aws-stack.json} (${stack_version})"
+echo "--- :lambda: Updating to ${stack_file} (${stack_version})"
 output=$(aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
   --region us-east-1 \
   --log-type Tail \
-  --payload "{\"StackName\":\"$stack_name\", \"StackFile\":\"${STACK_FILE:-aws-stack.json}\"}" \
+  --payload "{\"StackName\":\"$stack_name\", \"StackFile\":\"${stack_file}\"}" \
   output.json) || (
   echo "$output"
   exit 1
